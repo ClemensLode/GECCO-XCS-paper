@@ -17,27 +17,30 @@ In order to fulfil these requirements a new way of reward distribution for such 
 \subsection{Environmental Reward Function}
 \label{subsection:environment-reward-function}
 
-A ``goal position'' in the context of a predator/prey scenario could be defined as ``be in observation range of the goal object'' which would be equal to the global goal. Another approach would be to make use of the increased abilities of the sensors of the agents instead of being restricted to a simple binary function as in some multi-step environments (``goal position reached'' and ``goal position not reached''). 
+A ``being in the goal position'' in the context of a predator/prey scenario could be defined as ``being in observation range of the goal object'' which would be equal to the global goal. Another approach would be to make use of the increased abilities of the sensors of the agents instead of being restricted to a simple binary function as in some multi-step environments (``goal position reached'' and ``goal position not reached''). 
 
-Because of the number of possible reward functions that include sensory information not all functions can be tested in a reasonable amount of time. Thus, this paper proposes another approach:
-
-By looking at the global goal it is possible to examine reward functions by testing agents with static strategies instead of XCS. Although static strategies do not use a reward function, they still evaluate situations and corresponding actions either as ``good'' (``move in that direction'') or as ``bad'' (``don't move in that direction'').
-
-Of a set of simple implementations the best results (except for some special cases like very large environments and a relatively small number of agents) delivered the following heuristic:
-
+Because of the number of possible reward functions that include sensory information not all functions can be tested in a reasonable amount of time. So the focus was to explore the search space using static strategies modeled after a selection of reward functions and then test promising reward functions in connection with learning classifier systems. Although static strategies do not use a reward function, they still evaluate situations and corresponding actions either as ``good'' (``move in that direction'') or as ``bad'' (``don't move in that direction''). The combinations of two main components have evolved out of these preliminary tests: 
 \begin{itemize}
-	\item Cooperation (goal object not in sight) : Move in a random direction without other agents in sight.
-	\item Egoism (goal object in sight): Move in the direction of the goal object.
+	\item Cooperation (goal object not in sight/observation range) : Move in a random direction without other agents in observation range.
+	\item Egoism (goal object in sight/observation range): Move in the direction of the goal object.
 \end{itemize}
 
-Modelling this static strategy would require multiple states. As the original implementation uses a binary reward function the following approximation of the reward function $r_{b}(s_{a}, s_{g})$ with $s_{a}, s_{g}$ being indicators whether the goal object is in sight range ($s_{g} = true$) and whether any other agent is in sight range ($s_{a} = true$) is used:
+%While collaborative strategies showed significant improvement in some scenarios, in general they are scenario dependant 
 
-$$
-r_{b}(s_{a}, s_{g}) = \left\{ \begin{array}{rl}
-  0 & s_{a} \wedge \overline{s_{g}} \\
-  1 & \overline{s_{a}} \vee s_{g}
-       \end{array} \right.
-$$
+%By looking at the global goal it is possible to examine reward functions by testing agents with static strategies instead of XCS. 
+
+%Of a set of simple implementations the best results (except for some special cases like very large environments and a relatively small number of agents) delivered the following heuristic:
+
+Implementing a collaborative strategy in XCS would require multiple states. As the original implementation uses a binary reward function an approximation is used. The reward function returns $1$ when there is no agent in observation range or when the goal object is in sight range (or when both is the case) and $0$ otherwise.
+
+
+% the following approximation of the reward function $r_{b}(s_{a}, s_{g})$ with $s_{a}, s_{g}$ being indicators whether the goal object is in sight or observation range ($s_{g} = true$) and whether any other agent is in observation range ($s_{a} = true$) is used:
+%$$
+%r_{b}(s_{a}, s_{g}) = \left\{ \begin{array}{rl}
+%  0 & s_{a} \wedge \overline{s_{g}} \\
+%  1 & \overline{s_{a}} \vee s_{g}
+%       \end{array} \right.
+%$$
 
 As further adaptions to the reward is necessary the value this function returns will be called ``base reward'' and the function itself ``environmental reward function''. In the following section the actual reward for the rules of the XCS will be calculated. 
 
@@ -49,7 +52,7 @@ Above we concluded that it is important to determine points in time when the rew
 Assuming that the agent did something right when it gets into sight range of the goal object (or leaving the sight range of all other agents) such a situation change will be called a ``positive event'' while loosing the goal object or getting into sight range of other agents will be called a ``negative event''. Thus a positive event occurs whenever the base reward changes from $0$ to $1$, a negative event occurs whenever the base reward changes from $1$ to $0$ (see Figure~\ref{figure:positive-negative-events}).
 
 \begin{figure*}[ht]
-  \subfigure[Example of a series of base rewards that lead to positive and negative events.\label{figure:positive-negative-events}]{\includegraphics[width=0.33\textwidth]{positive_negative_events.eps}}\subfigure[Example of a series of base rewards that lead to neutral event (with \emph{maxStackSize} = 8).\label{figure:neutral-event}]{\includegraphics[width=0.33\textwidth]{neutral_event.eps}}\subfigure[Schematic presentation of the reward distribution to the action sets over time after several positive and negative events\label{figure:saved-rewards}]{\includegraphics[width=0.33\textwidth]{saved_rewards.eps}}
+  \subfigure[Example of a series of base rewards that lead to positive and negative events.\label{figure:positive-negative-events}]{\includegraphics[width=0.32\textwidth]{positive_negative_events.eps}}\hfill\subfigure[Example of a series of base rewards that lead to neutral event (with \emph{maxStackSize} = 8).\label{figure:neutral-event}]{\includegraphics[width=0.32\textwidth]{neutral_event.eps}}\hfill\subfigure[Reward distribution to the action sets over time after several positive and negative events\label{figure:saved-rewards}]{\includegraphics[width=0.32\textwidth]{saved_rewards.eps}}
 \caption{\mathversion{bold}Calculation of the reward of individual action sets by analyzing the course of the base reward}\label{figure:experiment}
 \end{figure*}
 
@@ -83,19 +86,16 @@ The approach that was used in this paper is to record not only the last action b
 
 Thus, when (and only when) an event occurs, the reward is distributed among the entries of the action sets that were saved since the last event. With the idea in mind that recent actions probably contributed more to a positive (negative) event they are given a higher (lower) reward than to actions that were executed long time ago. 
 
-This is done with a quadratic function which loosely resembles the transfer of the reward in the original implementation. With \(r(a)\) being the \emph{reward} for the \emph{action set} with age \(a\):
+For this a quadratic function which loosely resembles the transfer of the reward in the original implementation is used. With \(r(a)\) being the \emph{reward} for the \emph{action set} with age \(a\):
 $$
 r(a) = \left\{ \begin{array}{rl}
   \frac{{a}^{2}}{{\mathrm{size(\emph{action set})}}^{2}} &\mbox{ \emph{positive event}} \\
   \frac{{(1 - a)}^{2}}{{\mathrm{size(\emph{action set})}}^{2}} &\mbox{ \emph{negative event}} \\
-  1 &\mbox{ \emph{neutral event}, \emph{base reward} = $1$} \\
-  0 &\mbox{ \emph{neutral event}, \emph{base reward} = $0$}
+  \emph{base reward} &\mbox{ \emph{neutral event}}
        \end{array} \right.
 $$
 
-Figure~\ref{figure:saved-rewards} shows a distribution of the reward for an exemplary distribution of the base reward. For simplicity a linear distribution is displayed in the other graphics.
-
-More sophisticated approaches are possible, this is merely the most straightforward approach. Compared to a linear distribution tests showed no significant difference. 
+Figure~\ref{figure:saved-rewards} shows a distribution of the reward for an exemplary distribution of the base reward. For simplicity a linear distribution is displayed in the other graphics. More sophisticated approaches are possible, this is merely the most straightforward approach. Compared to a linear distribution tests showed no significant difference. 
 
 %\begin{figure}[ht]
 %\centerline{	
