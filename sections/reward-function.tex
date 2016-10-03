@@ -3,44 +3,63 @@
 
 Learning in single-step environments mainly requires that the agent has global information about the whole learning task, i.\,e., the optimal representation of an XCS's \emph{reward function} is also the solution of the actual problem. In the 6-multiplexer problem, the reward function already contains the table of the 6-multiplexer itself, which provides a straightforward evaluation of classifiers.
 
-In multi-step environments, the environment will only return a reward value equal to $1$ if the animat reaches the goal position 
-and $0$
-%. If not, the reward will be $0$ 
-at all other positions. 
-Since an animat has only access to local information, it is the individual agent's task to compute different reward values for all possible positions in a Maze to differentiate which movement is preferred at each step. In general, this is achieved by \emph{back propagating} the reward of the environment to previous actions. The reward is discounted in order to favor shorter routes. If the animat reaches the goal position, the scenario will be repeated a number of times. In other words, to find the optimal (shortest) route, i.\,e., the global reward function, the agent must be able to distinguish between all positions, i.\,e., the scenario must fulfill the Markov property.
+In multi-step environments, the environment will only return a reward value equal to $1$, if the animat reaches the goal position and $0$ %. If not, the reward will be $0$ 
+at all other positions. Since an animat has only access to local information, it is the individual agent's task to compute different reward values for all possible positions in a Maze to differentiate, which movement is preferred at each step. In general, this is achieved by \emph{back propagating} the reward of the environment to previous actions. The reward is discounted in order to favor shorter routes. If the animat reaches the goal position, the scenario will be repeated a number of times. In other words, to find the optimal (shortest) route (i.\,e., the global reward function), the agent must be able to distinguish between all positions (i.\,e., the scenario must fulfill the Markov property).
 
-In the predator/prey scenario, the nature of the reward function is not obvious. Since the prey continuously moves
-%, which provides a dynamically changing environment, 
-repetition of the learning process seems not possible. 
-Moreover, the environment does not possess the Markov property. Since all agents move, decide and learn in parallel, previously gathered information does not seem valid any longer.
-%Moreover, the environment does not possess the Markov property, since all agents move, decide, learn in parallel, and previously gathered information does not seem valid any longer. 
+In the predator/prey scenario, the nature of the reward function is not obvious. Since the prey continuously moves, % which provides a dynamically changing environment, 
+repetition of the learning process or a separate \emph{explore phase} seems not possible. Moreover, the environment does not possess the Markov property. Since all agents move, decide, and learn in parallel, previously gathered information does not seem valid any longer. % Moreover, the environment does not possess the Markov property, since all agents move, decide, learn in parallel, and previously gathered information does not seem valid any longer. 
 Thus, global information and therefore a global reward function cannot be constructed from the local agent's view. Still, previous actions require a direct reward process. Additionally, points in time have to be determined, at which a reward is distributed on past condition-action-mappings.
 %, even if the simulation (i.\,e., the observation task) is continuously performed.
 
-To fulfill these requirements, a new mechanism of reward distribution in such dynamic predator/prey scenarios is proposed. An expansion of the reward function by \emph{in\-clud\-ing sensory information} is firstly implemented % the \emph{environmental reward function} is chosen by testing static strategies 
-(see Section~\ref{subsection:environment-reward-function}). Then, predators will record the resulting reward values of previous actions and will create \emph{events}, if the reward values change or if no change occurs for a specific amount of time (see Section~\ref{subsection:events}). Finally, previously executed actions will be rewarded according to the \emph{type} of the event and the \emph{time difference} between events
+To fulfill these requirements, a new mechanism of reward distribution in such dynamic predator/prey scenarios is proposed. Firstly, the sensor abilities of individual agents are presented in Section~\ref{subsection:sensory-abilities}. Secondly, an expansion of the reward function is implemented by 
+including these sensory information (see Section~\ref{subsection:environment-reward-function}). Then, predators will record the resulting reward values of previous actions and will create \emph{events}, if the reward values change or if no change occurs for a specific amount of time (see Section~\ref{subsection:events}). Finally, previously executed actions will be rewarded according to the \emph{type} of the event and the \emph{time difference} between events
 %the current and the last event 
 (see Section~\ref{subsection:reward-distribution}). We explain this modified multi-step learning in the following. 
 
+\subsection{Sensory Abilities}
+\label{subsection:sensory-abilities}
+
+\begin{figure}[ht]
+	\subfigure[Sight range]{
+  	\label{figure:sight-range}
+		\includegraphics[height=2.62cm]{sight_range}}\hfill
+  \subfigure[Observation range]{
+  	\label{figure:observation-range}
+  	\includegraphics[height=2.62cm]{observation_range}}\hfill
+  \subfigure[Example situation]{ % with an agent, trees and food/prey]{
+  	\label{figure:example-sight-observation}
+  	\includegraphics[height=2.62cm]{example_sight_observation}}
+  \caption{\mathversion{bold}Sensor ranges of individual agents and an example situation: Obstacles/trees are marked with $T$, prey/food is marked with $F$, predators/agents are marked with $A$, and the sight and observation ranges are marked with gray and light gray color, respectively. Areas, which are out of sight of any predator, are marked with dark gray color.}
+  \label{figure:sight-directions}
+\end{figure}
+
+\begin{figure}[ht]
+	\centerline{
+		\includegraphics[width=0.2\textwidth]{example_string}}
+	% \caption{\mathversion{bold}The centralized agent's matching sensor data string of the example, as depicted in Figure~\ref{figure:example-sight-observation}}
+	\caption{\mathversion{bold}Matching sensor data string of the centralized agent, as depicted in Figure~\ref{figure:example-sight-observation}}
+	\label{figure:example-string}
+\end{figure}
+
+Both, the prey and the predators, have 24 binary sensors that can sense their close environment, but their lines of sight can be blocked by objects. Half of the sensors can detect objects, which are two fields away, while the other half can detect objects up to five fields away, as depicted in Figure~\ref{figure:sight-directions}. % The 12 sensors for each sight range are for the four directions and the three types of objects (prey, other agents and obstacles). An example of a resulting sensor data string is shown in Figure~\ref{figure:example-string}.
+Thus, 12 binary-coded sensors are used for both sight and observation range to encode every possible situation, as shown in Figure~\ref{figure:example-string}. Three bits are used to characterize a specific situation (prey, other predators, and obstacles) for each direction (north, east, south, and west). 
 
 \subsection{Environmental Reward Function}
 \label{subsection:environment-reward-function}
 
-In typical Maze environments, an animat will be rewarded by the environment, if it reaches a 
-%sparingly 
-sparsely distributed goal position. In the context of a predator/prey scenario implementing a dynamic observation task, the state \emph{reaching the goal position} could be interpreted as \emph{having the prey in the observation range}. Then, the local goal would be equal to the global goal from a single-agent's view. Another approach could utilize more complex sensor data on an agent's level instead of being restricted to using a reward function modeled after the global goal (e.\,g., a \emph{goal position is reached} and the \emph{goal position is not reached}). Since the number of possible reward functions, which include more sensor data, seems unlimited and not all functions can be tested in a reasonable amount of time, the investigated approach follows a simpler idea. The search space is explored by using \emph{static strategies} and then promising strategies are tested on learning predators. In the following, a selection of three static predator strategies is presented. 
+In typical Maze environments, an animat will be rewarded by the environment, if it reaches a sparsely distributed goal position. In the context of a predator/prey scenario implementing a dynamic observation task, the state \emph{reaching the goal position} could be interpreted as \emph{having the prey in the observation range}. Then, the local goal would be equal to the global goal from a single-agent's view. Another approach could utilize more complex sensor data on an agent's level instead of being restricted to using a reward function modeled after the global goal (e.\,g., a \emph{goal position is reached} and the \emph{goal position is not reached}). Since the number of possible reward functions, which include more sensor data, seems unlimited and not all functions can be tested in a reasonable amount of time, the investigated approach follows a simpler idea. The search space is explored by using \emph{static strategies} and then promising strategies are tested on learning predators. In the following, a selection of three static predator strategies is presented. 
 
 % Thus, a collaborative agent behavior, where an agent always tries to contribute to a maximal number of observations, will base on a combination of the two following main strategies: 
 
 \begin{itemize}
-	\item \emph{\textbf{Selfish behavior (observation range):}} Move towards the prey when it is in the \emph{\textbf{observation range,}} otherwise move in a randomly chosen direction.
-	\item \emph{\textbf{Selfish behavior (sight range):}} Move towards the prey when it is in the \emph{\textbf{sight range,}} otherwise move in a randomly chosen direction.
-	\item \emph{\textbf{Cooperative behavior:}} Move towards the prey when it is in the \emph{\textbf{sight range,}} otherwise move in a randomly chosen direction without having other agents in the individual \emph{\textbf{observation range.}}
+	\item \emph{\textbf{Selfish behavior (observation range):}} Move towards the prey, when it is in the \emph{\textbf{observation range,}} otherwise move in a randomly chosen direction.
+	\item \emph{\textbf{Selfish behavior (sight range):}} Move towards the prey, when it is in the \emph{\textbf{sight range,}} otherwise move in a randomly chosen direction.
+	\item \emph{\textbf{Cooperative behavior:}} Move towards the prey, when it is in the \emph{\textbf{sight range,}} otherwise move in a randomly chosen direction without having other agents in the individual \emph{\textbf{observation range.}}
 \end{itemize}
 
 Although static strategies do not use a reward function, they still evaluate condition-action-mappings either as \emph{good} (i.\,e., move in that direction) or as \emph{bad} (i.\,e., do not move in that direction). Thus, an appropriate reward function can be implemented. We define the return value of such a reward function as the \emph{base reward} and the function itself as the \emph{environmental reward function}.
 
-While the implementation of a \emph{selfish behavior} strategy with only one prey on the field is trivial, the \emph{cooperative behavior} strategy requires multiple return values of the reward function. For example it has to reward situations with only one agent better than situations with three agents in observation sight. Since the typical XCS implementation \cite{BW02} uses only a binary-coded reward function, an approximation will be used to differentiate between these different system states: The reward function will return $1$, if no other predator is in the individual observation range or if the prey is in the individual sight range (or both will be true), and $0$ otherwise. 
+While the implementation of a \emph{selfish behavior} strategy with only one prey on the field is trivial, the \emph{cooperative behavior} strategy requires multiple return values of the reward function (e.\,g., situations with only one agent should be rewarded better than situations with three agents in observation sight). Since the typical XCS implementation \cite{BW02} uses only a binary-coded reward function, an approximation will be used to differentiate between these different system states: The reward function will return $1$, if no other predator is in the individual observation range or if the prey is in the individual sight range (or both will be true), and $0$ otherwise. 
 
 % the following approximation of the reward function $r_{b}(s_{a}, s_{g})$ with $s_{a}, s_{g}$ being indicators whether the goal object is in sight or observation range ($s_{g} = true$) and whether any other agent is in observation range ($s_{a} = true$) is used:
 
@@ -56,20 +75,20 @@ While the implementation of a \emph{selfish behavior} strategy with only one pre
 \subsection{Events}
 \label{subsection:events}
 
-In the usual XCS implementation~\cite{BW02}, any positive \emph{base reward} is distributed whenever an animat reaches a goal position and the scenario is then restarted. Here, we analyze past \emph{base reward} values and generate so-called \emph{events} when either the \emph{base reward} value has changed or when no change occurs for a certain period of time.
+In the usual XCS implementation~\cite{BW02}, any positive \emph{base reward} is distributed, whenever an animat reaches a goal position and the scenario is then restarted. Here, we analyze past \emph{base reward} values and generate so-called \emph{events}, when either the \emph{base reward} value has changed or when no change occurs for a certain period of time.
 
-Assuming that a predator has taken a good decision when the prey comes into the sight range of a predator (or the predator leaves the sight ranges of all other predators), we define such a situation change as a \emph{positive event}. Moreover, loosing the prey or coming into the sight ranges of other predators will be defined as a \emph{negative event}. In other words, a positive event always occurs whenever the \emph{base reward} changes from $0$ to $1$ and a negative event occurs whenever the \emph{base reward} changes from $1$ to $0$ (see Figure~\ref{figure:positive-negative-events}).
+Assuming that a predator has taken a good decision, when the prey comes into the sight range of a predator (or the predator leaves the sight ranges of all other predators), we define such a situation change as a \emph{positive event}. Moreover, loosing the prey or coming into the sight ranges of other predators will be defined as a \emph{negative event}. In other words, a positive event always occurs, whenever the \emph{base reward} changes from $0$ to $1$, and a negative event occurs, whenever the \emph{base reward} changes from $1$ to $0$ (see Figure~\ref{figure:positive-negative-events}).
 
 \begin{figure*}[ht]
   \subfigure[Example of a series of \emph{base rewards}, which lead to both \emph{positive} and \emph{negative events}.]{
   	\label{figure:positive-negative-events}
-  	\includegraphics[width=0.32\textwidth]{positive_negative_events.eps}}\hfill
+  	\includegraphics[width=0.32\textwidth]{positive_negative_events}}\hfill
   \subfigure[Example of a series of \emph{base rewards}, which force a \emph{neutral event} (\texttt{maxStackSize} = 8).]{
   	\label{figure:neutral-event}
-  	\includegraphics[width=0.32\textwidth]{neutral_event.eps}}\hfill
+  	\includegraphics[width=0.32\textwidth]{neutral_event}}\hfill
   \subfigure[Reward distribution for a number of \emph{positive} and \emph{negative events} (dashed line)]{
   	\label{figure:saved-rewards}
-  	\includegraphics[width=0.32\textwidth]{saved_rewards.eps}}
+  	\includegraphics[width=0.32\textwidth]{saved_rewards}}
 	\caption{\mathversion{bold}Calculation of the reward of individual action sets by analyzing the \emph{base reward}}
 	\label{figure:experiment}
 \end{figure*}
@@ -82,7 +101,9 @@ Assuming that a predator has taken a good decision when the prey comes into the 
 % \label{figure:positive-negative-events}
 % \end{figure}
 
-Nevertheless, a predator also contributes to a cooperative group behavior, if the prey is never seen in the personal observation range and other predators are also stayed away. Hence, a predator will never encounter an event and no reward will be computed to evaluate past actions. Thus, the number of learning cycles -- that can occur without encountering an event -- have been limited by a variable \verb|maxStackSize|. If the step counter reaches this threshold a \emph{neutral event} will occur (see Figure~\ref{figure:neutral-event}) and the step counter is reset to \frac{\verb|maxStackSize|}{2}. Additionally, half of the action sets in the stack receive rewards according to the actual \emph{base reward} value and are then discarded. Other reset values can be used, \frac{\verb|maxStackSize|}{2} is just a trade-off between speed and accuracy.
+Nevertheless, a predator also contributes to a cooperative group behavior, if the prey is never seen in the personal observation range and other predators are also stayed away. Hence, a predator will never encounter an event and no reward will be computed to evaluate past actions. Thus, the number of learning cycles -- that can occur without encountering an event -- have been limited by a variable \verb|maxStackSize|. If the a counter reaches this threshold a \emph{neutral event} will occur (see Figure~\ref{figure:neutral-event}) for the oldest $\frac{\texttt{maxStackSize}}{2}$ action sets. They receive the current \emph{base reward} as reward and are then discarded.
+
+%and the step counter is reset to $\frac{\texttt{maxStackSize}}{2}$. Additionally, half of the action sets in the stack receive rewards according to the actual \emph{base reward} value and are then discarded. Other reset values can be used, $\frac{\texttt{maxStackSize}}{2}$ is just a trade-off between speed and accuracy.
 
 % \begin{figure}[ht]
 % \centerline{	
@@ -95,9 +116,9 @@ Nevertheless, a predator also contributes to a cooperative group behavior, if th
 \subsection{Reward Distribution}
 \label{subsection:reward-distribution}
 
-As already discussed, the standard XCS implementation is based on the assumption that it learns within a MDP. This is expressed in the way the reward is distributed on the classifiers that have contributed to reach the goal. Generally, several repetitions are required to correctly distribute the reward to all classifiers that have contributed to the solution.
+As already discussed, the standard XCS implementation is based on the assumption that it learns within an MDP. This is expressed in the way the reward is distributed on the classifiers that have contributed to reach the goal. Generally, several repetitions are required to correctly distribute the reward to all classifiers that have contributed to the solution.
 
-In a dynamic scenario, such repetitions are not possible. The scenario is not restarted and the observation task is continuously performed. Thus, a separate mechanism is introduced to reward previous (contributing) action sets as well. This new approach stores not only the last, but a series of previous action sets (up to \verb|maxStackSize|). We admit that such a memory mechanism does not necessarily restore the Markov property (the scenario is obviously a NOMDP, see Section~\ref{subsection:scenario-classification}). However, it directly associates a changing base reward value with previous steps, which have contributed to the success (or to a failure), since the last change of the \emph{base reward} has been observed. % and an improvement in the performance is to be expected.
+In a dynamic scenario, such repetitions are not possible. The scenario is not restarted and the \emph{observation task} is continuously performed. Thus, a separate mechanism is introduced to reward previous (contributing) action sets as well. This new approach stores a number of previous action sets instead of only the last. We admit that such a memory mechanism does not necessarily restore the Markov property (the scenario is obviously an NOMDP). However, it directly associates a changing base reward value with previous steps, which have contributed to the success (or to a failure), since the last change of the \emph{base reward} has been observed. % and an improvement in the performance is to be expected.
 Thus, when, and only when, an event occurs, the reward will be distributed among the entries of the action sets that have been stored, since the last event has been occurred. Moreover, recent action sets have probably contributed more to a positive (negative) event than older action sets. Hence, they are evaluated with a higher (lower) reward than those action sets that were executed several steps before. To realize this \emph{reward distribution} mechanism, a quadratic function is used, which extends the rewarding procedure of the original XCS implementation with $r(a)$ being the \emph{reward} for the \emph{action set} with an \emph{age} of $a$:
 $$ % \begin{equation}
 	r(a) = 
@@ -108,7 +129,7 @@ $$ % \begin{equation}
   	\end{array} \right.
 $$ % \end{equation}
 
-More sophisticated approaches are possible although their actual influence seem marginal. The quadratic function was used because it resembles the original reward distribution method of XCS. In the tests this approach did not show significant differences to a linear distribution. In Figure~\ref{figure:saved-rewards}, an example illustrates this reward distribution mechanism. To make it as simple as possible, a linear distribution of the reward on previous action sets is displayed. 
+More sophisticated approaches are possible although their actual influence seem marginal. The quadratic function was used because it resembles the original reward distribution method of XCS. In the tests this approach did not show significant differences to a linear distribution. In Figure~\ref{figure:saved-rewards}, an example illustrates this reward distribution mechanism. To make it as simple as possible, a linear distribution of the reward on previous action sets is displayed.  
 
 % \begin{figure}[ht]
 % \centerline{	
