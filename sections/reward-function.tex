@@ -67,7 +67,7 @@ Assuming that a predator has taken a good decision when the prey comes into the 
   \subfigure[Example of a series of \emph{base rewards}, which force a \emph{neutral event} (\texttt{maxStackSize} = 8).]{
   	\label{figure:neutral-event}
   	\includegraphics[width=0.32\textwidth]{neutral_event.eps}}\hfill
-  \subfigure[Reward distribution mechanism for a number of \emph{positive} and \emph{negative events}]{
+  \subfigure[Reward distribution for a number of \emph{positive} and \emph{negative events} (dashed line)]{
   	\label{figure:saved-rewards}
   	\includegraphics[width=0.32\textwidth]{saved_rewards.eps}}
 	\caption{\mathversion{bold}Calculation of the reward of individual action sets by analyzing the \emph{base reward}}
@@ -82,7 +82,7 @@ Assuming that a predator has taken a good decision when the prey comes into the 
 % \label{figure:positive-negative-events}
 % \end{figure}
 
-Nevertheless, a predator also contributes to a cooperative group behavior, if the prey is never seen in the personal observation range and other predators are also stayed away. Hence, a predator will never encounter an event and no reward will be computed to evaluate past actions. Thus, the number of learning cycles -- that can occur without encountering an event -- have been limited by a variable \verb|maxStackSize|. If this step counter reaches a predefined threshold, a \emph{neutral event} will occur (see Figure~\ref{figure:neutral-event}). Then, the step counter is reset to $0$ and the LCS waits for a new event or the step counter again passes the threshold of the \verb|maxStackSize|. Additionally, half of the action sets in the stack receive rewards according to the actual \emph{base reward} value and are then discarded.
+Nevertheless, a predator also contributes to a cooperative group behavior, if the prey is never seen in the personal observation range and other predators are also stayed away. Hence, a predator will never encounter an event and no reward will be computed to evaluate past actions. Thus, the number of learning cycles -- that can occur without encountering an event -- have been limited by a variable \verb|maxStackSize|. If the step counter reaches this threshold a \emph{neutral event} will occur (see Figure~\ref{figure:neutral-event}) and the step counter is reset to \frac{\verb|maxStackSize|}{2}. Additionally, half of the action sets in the stack receive rewards according to the actual \emph{base reward} value and are then discarded. Other reset values can be used, \frac{\verb|maxStackSize|}{2} is just a trade-off between speed and accuracy.
 
 % \begin{figure}[ht]
 % \centerline{	
@@ -97,7 +97,7 @@ Nevertheless, a predator also contributes to a cooperative group behavior, if th
 
 As already discussed, the standard XCS implementation is based on the assumption that it learns within a MDP. This is expressed in the way the reward is distributed on the classifiers that have contributed to reach the goal. Generally, several repetitions are required to correctly distribute the reward to all classifiers that have contributed to the solution.
 
-In a dynamic scenario, such repetitions are not possible. The scenario is not restarted and the observation task is continuously performed. Thus, a separate mechanism is introduced to reward previous (contributing) action sets as well. This new approach stores not only the last, but all previous action sets. We admit that such a memory mechanism does not necessarily restore the Markov property (the scenario is obviously a NOMDP, see Section~\ref{subsection:scenario-classification}). However, it directly associates a changing base reward value with previous steps, which have contributed to the success (or to a failure), since the last change of the \emph{base reward} has been observed. % and an improvement in the performance is to be expected.
+In a dynamic scenario, such repetitions are not possible. The scenario is not restarted and the observation task is continuously performed. Thus, a separate mechanism is introduced to reward previous (contributing) action sets as well. This new approach stores not only the last, but a series of previous action sets (up to \verb|maxStackSize|). We admit that such a memory mechanism does not necessarily restore the Markov property (the scenario is obviously a NOMDP, see Section~\ref{subsection:scenario-classification}). However, it directly associates a changing base reward value with previous steps, which have contributed to the success (or to a failure), since the last change of the \emph{base reward} has been observed. % and an improvement in the performance is to be expected.
 Thus, when, and only when, an event occurs, the reward will be distributed among the entries of the action sets that have been stored, since the last event has been occurred. Moreover, recent action sets have probably contributed more to a positive (negative) event than older action sets. Hence, they are evaluated with a higher (lower) reward than those action sets that were executed several steps before. To realize this \emph{reward distribution} mechanism, a quadratic function is used, which extends the rewarding procedure of the original XCS implementation with $r(a)$ being the \emph{reward} for the \emph{action set} with an \emph{age} of $a$:
 $$ % \begin{equation}
 	r(a) = 
@@ -108,7 +108,7 @@ $$ % \begin{equation}
   	\end{array} \right.
 $$ % \end{equation}
 
-In Figure~\ref{figure:saved-rewards}, an example illustrates this reward distribution mechanism. To make it simple as possible, a linear distribution of the reward on previous action sets is displayed, but more sophisticated approaches seems possible. However, significant differences between a linear or a no-linear distribution have not been investigated so far. 
+More sophisticated approaches are possible although their actual influence seem marginal. The quadratic function was used because it resembles the original reward distribution method of XCS. In the tests this approach did not show significant differences to a linear distribution. In Figure~\ref{figure:saved-rewards}, an example illustrates this reward distribution mechanism. To make it as simple as possible, a linear distribution of the reward on previous action sets is displayed. 
 
 % \begin{figure}[ht]
 % \centerline{	
