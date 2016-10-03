@@ -31,7 +31,7 @@
   institution = {Boeing Advanced Technology Center, Boeing Computing Services},
   year = {1986},
   number = {BCS-{\-}G2010--{\-}28},
-  address = {Seattle, Washington, United States of America}
+  address = {Seattle, Washington, United States of America},
 }
 
 @ARTICLE{Bresenham,
@@ -50,16 +50,6 @@
   institution = {Learning Classifier Systems Group Technical Report UWELCSG03-005},
   year = {2003},
   url = {http://www2.cmp.uea.ac.uk/~it/ycs/ycs.pdf}
-}
-
-@INPROCEEDINGS{Butz2003,
-  author = {Martin Butz and Kumara Sastry and David E. Goldberg},
-  title = {Tournament Selection: Stable Fitness Pressure in XCS},
-  booktitle = {GECCO},
-  year = {2003},
-  pages = {1857-1869},
-  bibsource = {DBLP, http://dblp.uni-trier.de},
-  ee = {http://link.springer.de/link/service/series/0558/bibs/2724/27241857.htm}
 }
 
 @INBOOK{Butz2006,
@@ -109,7 +99,7 @@
   year = {2005},
   volume = {9},
   pages = {452--473},
-  number = {5}
+  number = {5},
 }
 
 @ARTICLE{BKLW04,
@@ -440,7 +430,7 @@
   booktitle = {Proc. IEEE International Workshop on Haptic Audio visual Environments
 	and Games HAVE 2008},
   year = {2008},
-  pages = {59--64}
+  pages = {59--64},
 }
 
 @INPROCEEDINGS{1102280,
@@ -481,7 +471,7 @@
   booktitle = {INFORMATIK 2006 -- Informatik f{\"u}r Menschen!},
   year = {2006},
   volume = {P-93},
-  series = {LNI},
+  series = {GI-Edition -- Lecture Notes in Informatics (LNI)},
   pages = {112--119},
   publisher = {Bonner K{\"o}llen Verlag},
   abstract = {Technical scenarios in areas like automotive or production systems
@@ -679,17 +669,6 @@
   howpublished = {Paperback}
 }
 
-@INPROCEEDINGS{689040,
-  author = {Wilson,, Stewart W.},
-  title = {Get Real! XCS with Continuous-Valued Inputs},
-  booktitle = {Learning Classifier Systems, From Foundations to Applications},
-  year = {2000},
-  pages = {209--222},
-  address = {London, UK},
-  publisher = {Springer-Verlag},
-  isbn = {3-540-67729-1}
-}
-
 @INCOLLECTION{Wil00a,
   author = {Stewart W. Wilson},
   title = {Get Real! {XCS} with continuous-valued inputs},
@@ -702,6 +681,17 @@
   file = {Wil00a.pdf:Learning\\Learning Classifier Systems\\Wil00a.pdf:PDF},
   owner = {Richter},
   timestamp = {2007.10.09}
+}
+
+@INPROCEEDINGS{689040,
+  author = {Wilson,, Stewart W.},
+  title = {Get Real! XCS with Continuous-Valued Inputs},
+  booktitle = {Learning Classifier Systems, From Foundations to Applications},
+  year = {2000},
+  pages = {209--222},
+  address = {London, UK},
+  publisher = {Springer-Verlag},
+  isbn = {3-540-67729-1}
 }
 
 @INPROCEEDINGS{xcs2,
@@ -736,4 +726,18 @@
   owner = {Richter},
   timestamp = {2007.10.09}
 }
+
+
+@inproceedings{Butz2003,
+  author    = {Martin Butz and
+               Kumara Sastry and
+               David E. Goldberg},
+  title     = {Tournament Selection: Stable Fitness Pressure in XCS},
+  booktitle = {GECCO},
+  year      = {2003},
+  pages     = {1857-1869},
+  ee        = {http://link.springer.de/link/service/series/0558/bibs/2724/27241857.htm},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
 
